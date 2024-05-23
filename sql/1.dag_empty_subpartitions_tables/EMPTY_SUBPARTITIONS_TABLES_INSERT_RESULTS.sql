@@ -1,0 +1,16 @@
+INSERT INTO DBADMINDATA.EMPTY_SUBPARTITIONS_TABLES(DBID, 
+																									 OWNER, 
+																									 SEGMENT_NAME, 
+																									 PARTITION_NAME, 
+																									 SEGMENT_TYPE, 
+																									 NUM_ROWS, 
+																									 SEGMENT_SIZE_MB, 
+																									 INDEX_SIZE_FOR_TABLE)
+					VALUES(:dbid, 
+								 :owner, 
+								 :segment_name, 
+								 :partition_name, 
+								 :segment_type, 
+								 :num_rows, 
+								 :segment_size_mb, 
+								 :index_size_for_table)
