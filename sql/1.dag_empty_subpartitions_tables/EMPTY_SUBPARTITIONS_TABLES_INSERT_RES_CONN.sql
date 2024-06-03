@@ -1,6 +1,4 @@
-INSERT INTO DBADMINDATA.EMPTY_SUBPARTITIONS_TABLES_DB_LIST(DBID, 
-															SUCCESS_CONNECT,
-															ERROR_TEXT)
-															VALUES (:dbid, 
-																	:success_connect,
-																	:error_text)
+UPDATE DBADMINDATA.EMPTY_SUBPARTITIONS_TABLES_DB_LIST
+	SET STATUS = :status,
+			ERROR_TEXT = :error_text
+	WHERE DBID = :DBID
