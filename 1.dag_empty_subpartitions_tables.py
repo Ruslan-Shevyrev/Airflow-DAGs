@@ -40,8 +40,8 @@ def _get_info():
     with apex_hook.get_conn() as connection_apex:
         sql_list = get_sql_scripts(connection_apex)
         with connection_apex.cursor() as cursor_apex:
-            cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_CLEAR'])
-            connection_apex.commit()
+            #cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_CLEAR'])
+            #connection_apex.commit()
 
             cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_SELECT_DB'])
             rows = cursor_apex.fetchall()
@@ -49,6 +49,11 @@ def _get_info():
     for row in rows:
         rows_db = []
         error_text = None
+        with apex_hook.get_conn() as connection_apex:
+            with connection_apex.cursor() as cursor_apex:
+                cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_START_DB'],
+                                    dbid=row[2])
+                connection_apex.commit()
         try:
             with oracledb.connect(user="SYS",
                                   password=row[0],
@@ -57,11 +62,14 @@ def _get_info():
                 with connection_db.cursor() as cursor_db:
                     cursor_db.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_SELECT_RESULTS'])
                     rows_db = cursor_db.fetchall()
-                    connection_result = 'Y'
+                    status = 'success'
         except Exception as e:
             rows_db.clear()
-            connection_result = 'N'
-            error_text = str(e)
+            status = 'error'
+            try:
+                error_text = str(e)
+            except Exception as ex:
+                error_text = 'Unknown Error'
 
         with apex_hook.get_conn() as connection_apex:
             with connection_apex.cursor() as cursor_apex:
@@ -78,7 +86,7 @@ def _get_info():
 
                 cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_INSERT_RES_CONN'],
                                     dbid=int(row[2]),
-                                    success_connect=str(connection_result),
+                                    status=str(status),
                                     error_text=error_text)
                 connection_apex.commit()
 
