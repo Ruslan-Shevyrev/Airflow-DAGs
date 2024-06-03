@@ -1,9 +1,9 @@
-import airflow
 from airflow import DAG
 from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.oracle.hooks.oracle import OracleHook
 import oracledb
+from datetime import datetime
 
 default_args = {
     "email": ["apexdev@sportmaster.ru"],
@@ -12,8 +12,8 @@ default_args = {
 
 dag = DAG(
     dag_id="empty_subpartitions_tables",
-    start_date=airflow.utils.dates.days_ago(0),
-    schedule_interval="@monthly",
+    start_date=datetime(2024, 1, 1),
+    schedule_interval="0 0 1 * *",
     catchup=False,
     tags=['apex'],
     default_args=default_args
@@ -61,7 +61,7 @@ def _get_info():
         except Exception as e:
             rows_db.clear()
             connection_result = 'N'
-            error_text = e
+            error_text = str(e)
 
         with apex_hook.get_conn() as connection_apex:
             with connection_apex.cursor() as cursor_apex:
