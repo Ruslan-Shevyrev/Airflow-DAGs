@@ -3,7 +3,7 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.oracle.hooks.oracle import OracleHook
 import oracledb
-from datetime import datetime
+from datetime import datetimex
 
 default_args = {
     "email": ["apexdev@sportmaster.ru"],
