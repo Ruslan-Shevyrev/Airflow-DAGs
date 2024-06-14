@@ -3,7 +3,7 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.oracle.hooks.oracle import OracleHook
 import oracledb
-from datetime import datetimex
+from datetime import datetime
 
 default_args = {
     "email": ["apexdev@sportmaster.ru"],
@@ -40,8 +40,8 @@ def _get_info():
     with apex_hook.get_conn() as connection_apex:
         sql_list = get_sql_scripts(connection_apex)
         with connection_apex.cursor() as cursor_apex:
-            #cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_CLEAR'])
-            #connection_apex.commit()
+            cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_CLEAR'])
+            connection_apex.commit()
 
             cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_SELECT_DB'])
             rows = cursor_apex.fetchall()
@@ -68,7 +68,7 @@ def _get_info():
             status = 'error'
             try:
                 error_text = str(e)
-            except Exception as ex:
+            except Exception:
                 error_text = 'Unknown Error'
 
         with apex_hook.get_conn() as connection_apex:

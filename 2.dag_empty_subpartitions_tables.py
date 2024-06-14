@@ -43,14 +43,7 @@ def _get_info():
     with apex_hook.get_conn() as connection_apex:
         sql_list = get_sql_scripts(connection_apex)
         with connection_apex.cursor() as cursor_apex:
-            cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_SELECT_DB'])
-            rows = cursor_apex.fetchall()
-
-    for row in rows:
-        value = '{ "DBID" : ' + str(row[0]) + '}'
-        producer.send(topic=TOPIC,
-                      value=bytes(value, 'utf-8'))
-        producer.flush()
+            cursor_apex.execute(sql_list['EMPTY_SUBPARTITIONS_TABLES_QUEUE_DBS'])
 
 
 get_info = PythonOperator(
