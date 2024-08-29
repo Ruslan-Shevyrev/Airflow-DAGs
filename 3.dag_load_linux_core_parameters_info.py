@@ -34,11 +34,11 @@ def get_sql_scripts(connection):
 
 
 def _get_kernel():
-    PARAMS = ['kernel']
-    URL = 'https://www.kernel.org/doc/Documentation/sysctl/'
+    params = ['kernel']
+    url = 'https://www.kernel.org/doc/Documentation/sysctl/'
 
-    for param_prefix in PARAMS:
-        req = requests.get(URL + param_prefix + '.txt')
+    for param_prefix in params:
+        req = requests.get(url + param_prefix + '.txt')
 
         params_arr = req.text.split('==============================================================')
 
@@ -72,10 +72,66 @@ def _get_kernel():
                 connection_apex.commit()
 
 
+def _get_net_core():
+    params = ['net']
+    url = 'https://www.kernel.org/doc/Documentation/sysctl/'
+
+    for param_prefix in params:
+        req = requests.get(url + param_prefix + '.txt')
+
+        params_arr = req.text.split('-------------------------------------------------------')
+        net_core = params_arr[1]
+        net_core = net_core.replace('------------------------------', '&&&')
+        net_core = net_core.replace('----------------------------', '&&&')
+        net_core = net_core.replace('----------------------', '&&&')
+        net_core = net_core.replace('---------------------', '&&&')
+        net_core = net_core.replace('------------------', '&&&')
+        net_core = net_core.replace('----------------', '&&&')
+        net_core = net_core.replace('--------------', '&&&')
+        net_core = net_core.replace('-------------', '&&&')
+        net_core = net_core.replace('------------', '&&&')
+        net_core = net_core.replace('----------', '&&&')
+        net_core = net_core.replace('--------', '&&&')
+        net_core_params_arr = net_core.split('&&&')
+        params_dict_temp = {}
+        params_dict = {}
+
+        for i in range(len(net_core_params_arr)):
+            if i != 0:
+                param = net_core_params_arr[i-1].strip().split('\n')[-1].strip()
+                value = '\n'.join(net_core_params_arr[i].split('\n')[:-2]).strip()
+                params_dict_temp[param] = value
+
+        for key in params_dict_temp:
+            key_tmp = key.split(':')[0]
+            keys_tmp = re.split(r'[&,]+|and ', key_tmp)
+            for key_tmp in keys_tmp:
+                if key_tmp.strip() != '':
+                    params_dict[param_prefix + '.core.' + key_tmp.strip()] = params_dict_temp[key].strip('-').strip()
+
+        apex_hook = OracleHook(oracle_conn_id="apex")
+
+        with apex_hook.get_conn() as connection_apex:
+            sql_list = get_sql_scripts(connection_apex)
+            with connection_apex.cursor() as cursor_apex:
+                for key in params_dict:
+                    cursor_apex.execute(sql_list['LOAD_LINUX_CORE_PARAMETERS_INFO_MERGE'],
+                                        param=key,
+                                        description=params_dict[key])
+
+                connection_apex.commit()
+
+
 get_kernel = PythonOperator(
     task_id="kernel",
     python_callable=_get_kernel,
     dag=dag,
 )
 
-start >> get_kernel
+get_net_core = PythonOperator(
+    task_id="net.core",
+    python_callable=_get_net_core,
+    dag=dag,
+)
+
+start >> get_kernel >> get_net_core
