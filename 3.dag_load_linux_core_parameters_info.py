@@ -11,7 +11,7 @@ DEFAULT_ARGS = {"email": ["apexdev@sportmaster.ru"],
 
 
 dag = DAG(
-    dag_id="empty_subpartitions_tables",
+    dag_id="dag_load_linux_core_parameters_info",
     start_date=datetime(2024, 1, 1),
     schedule_interval=None,
     catchup=False,
