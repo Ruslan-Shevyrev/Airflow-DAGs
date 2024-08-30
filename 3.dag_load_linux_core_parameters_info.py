@@ -131,8 +131,8 @@ def _get_net_tipc():
 
         params_arr = req.text.split('-------------------------------------------------------')
         net_tipc = params_arr[6]
-        net_tipc = net_tipc.replace('----------', '&&&')
         net_tipc = net_tipc.replace('--------------', '&&&')
+        net_tipc = net_tipc.replace('----------', '&&&')
 
         net_core_params_arr = net_tipc.split('&&&')
         params_dict_temp = {}
