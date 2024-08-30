@@ -33,6 +33,34 @@ def get_sql_scripts(connection):
     return sqls
 
 
+def _get_abi():
+    params = ['abi']
+    url = 'https://www.kernel.org/doc/Documentation/sysctl/'
+
+    for param_prefix in params:
+        req = requests.get(url + param_prefix + '.txt')
+
+        params_arr = req.text.split('===========================================================')
+        params_arr.pop(0)
+        params_arr.pop(0)
+        params_arr.pop(len(params_arr) - 1)
+
+        params_dict = {param_prefix+'.'+a.strip().split('\n')[0].strip(':'): '\n'.join(a.strip().split('\n')[1:])
+                       for a in params_arr}
+
+        apex_hook = OracleHook(oracle_conn_id="apex")
+
+        with apex_hook.get_conn() as connection_apex:
+            sql_list = get_sql_scripts(connection_apex)
+            with connection_apex.cursor() as cursor_apex:
+                for key in params_dict:
+                    cursor_apex.execute(sql_list['LOAD_LINUX_CORE_PARAMETERS_INFO_MERGE'],
+                                        param=key,
+                                        description=params_dict[key].strip())
+
+                connection_apex.commit()
+
+
 def _get_kernel():
     params = ['kernel']
     url = 'https://www.kernel.org/doc/Documentation/sysctl/'
@@ -232,6 +260,11 @@ def _get_vm():
 
                 connection_apex.commit()
 
+get_abi = PythonOperator(
+    task_id="abi",
+    python_callable=_get_abi,
+    dag=dag,
+)
 
 get_kernel = PythonOperator(
     task_id="kernel",
@@ -264,4 +297,4 @@ get_vm = PythonOperator(
 )
 
 
-start >> get_kernel >> get_net_core >> get_net_tipc >> get_user >> get_vm
+start >> get_abi >> get_kernel >> get_net_core >> get_net_tipc >> get_user >> get_vm
