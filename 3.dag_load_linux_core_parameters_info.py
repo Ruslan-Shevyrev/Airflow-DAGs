@@ -164,6 +164,32 @@ def _get_net_tipc():
                 connection_apex.commit()
 
 
+def _get_user():
+    params = ['user']
+    url = 'https://www.kernel.org/doc/Documentation/sysctl/'
+
+    for param_prefix in params:
+        req = requests.get(url + param_prefix + '.txt')
+
+        params_arr = req.text.split('- ')
+        params_arr.pop(0)
+
+        params_dict = {param_prefix+'.'+a.strip().split('\n')[0].strip(): '\n'.join(a.strip().split('\n')[1:])
+                       for a in params_arr}
+
+        apex_hook = OracleHook(oracle_conn_id="apex")
+
+        with apex_hook.get_conn() as connection_apex:
+            sql_list = get_sql_scripts(connection_apex)
+            with connection_apex.cursor() as cursor_apex:
+                for key in params_dict:
+                    cursor_apex.execute(sql_list['LOAD_LINUX_CORE_PARAMETERS_INFO_MERGE'],
+                                        param=key,
+                                        description=params_dict[key].strip())
+
+                connection_apex.commit()
+
+
 get_kernel = PythonOperator(
     task_id="kernel",
     python_callable=_get_kernel,
@@ -183,4 +209,10 @@ get_net_tipc = PythonOperator(
 )
 
 
-start >> get_kernel >> get_net_core >> get_net_tipc
+get_user = PythonOperator(
+    task_id="user",
+    python_callable=_get_user,
+    dag=dag,
+)
+
+start >> get_kernel >> get_net_core >> get_net_tipc >> get_user
