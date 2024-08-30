@@ -61,6 +61,50 @@ def _get_abi():
                 connection_apex.commit()
 
 
+def _get_fs():
+    params = ['fs']
+    url = 'https://www.kernel.org/doc/Documentation/sysctl/'
+
+    for param_prefix in params:
+        req = requests.get(url + param_prefix + '.txt')
+
+        params_arr = req.text.split('==============================================================')
+
+        params_arr.pop(0)
+        params_arr.pop(0)
+        params_arr.pop(len(params_arr) - 1)
+
+        params_dict_temp = {}
+        for params in params_arr:
+            param = params.strip().split('\n')[0].strip(':')
+            if param in params_dict_temp:
+                params_dict_temp[param] = params_dict_temp[param] + '\n'+'\n'.join(params.strip().split('\n')[1:])
+            else:
+                params_dict_temp[param] = '\n'.join(params.strip().split('\n')[1:])
+
+        params_dict = {}
+
+        for key in params_dict_temp:
+            key_tmp = key.split(':')[0]
+            keys_tmp = re.split(r'[&,]+|and ', key_tmp)
+            for key_tmp in keys_tmp:
+                if key_tmp.strip() != '':
+                    param = param_prefix + '.' + key_tmp.strip()
+                    params_dict[param] = params_dict_temp[key].strip()
+
+        apex_hook = OracleHook(oracle_conn_id="apex")
+
+        with apex_hook.get_conn() as connection_apex:
+            sql_list = get_sql_scripts(connection_apex)
+            with connection_apex.cursor() as cursor_apex:
+                for key in params_dict:
+                    cursor_apex.execute(sql_list['LOAD_LINUX_CORE_PARAMETERS_INFO_MERGE'],
+                                        param=key,
+                                        description=params_dict[key])
+
+                connection_apex.commit()
+
+
 def _get_kernel():
     params = ['kernel']
     url = 'https://www.kernel.org/doc/Documentation/sysctl/'
@@ -260,9 +304,16 @@ def _get_vm():
 
                 connection_apex.commit()
 
+
 get_abi = PythonOperator(
     task_id="abi",
     python_callable=_get_abi,
+    dag=dag,
+)
+
+get_fs = PythonOperator(
+    task_id="fs",
+    python_callable=_get_fs,
     dag=dag,
 )
 
