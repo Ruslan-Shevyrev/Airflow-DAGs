@@ -13,7 +13,7 @@ TOPIC = 'TABLES_WITH_INSERTS_ONLY'
 
 dag = DAG(
     dag_id="tables_with_inserts_only",
-    start_date=datetime(2024, 1, 1),
+    start_date=datetime(2025, 4, 28),
     schedule_interval="00 01 * * 2",
     catchup=False,
     tags=['apex'],
