@@ -3,17 +3,13 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from datetime import datetime
-from kafka import KafkaProducer
 
 DEFAULT_ARGS = {"email": ["apexdev@sportmaster.ru"],
                 "email_on_failure": True}
 
-KAFKA_BOOTSTRAP_SERVER = 'oraapex-prod:9092'
-TOPIC = 'TABLES_WITH_INSERTS_ONLY'
-
 dag = DAG(
     dag_id="tables_with_inserts_only",
-    start_date=datetime(2025, 4, 28),
+    start_date=datetime(2025, 4, 1),
     schedule_interval="00 01 * * 2",
     catchup=False,
     tags=['apex'],
@@ -35,9 +31,6 @@ def get_sql_scripts(connection):
 
 
 def _get_info():
-
-    producer = KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVER)
-
     apex_hook = OracleHook(oracle_conn_id="apex")
 
     with apex_hook.get_conn() as connection_apex:
