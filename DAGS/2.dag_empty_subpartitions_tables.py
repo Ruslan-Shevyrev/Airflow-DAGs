@@ -38,7 +38,7 @@ def _get_info():
 
     producer = KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVER)
 
-    apex_hook = OracleHook(oracle_conn_id="apex")
+    apex_hook = OracleHook(oracle_conn_id="apex_ms_kafka_es_consumer")
 
     with apex_hook.get_conn() as connection_apex:
         sql_list = get_sql_scripts(connection_apex)
