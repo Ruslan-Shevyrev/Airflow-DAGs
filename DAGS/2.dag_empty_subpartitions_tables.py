@@ -3,13 +3,9 @@ from airflow.operators.python import PythonOperator
 from airflow.operators.empty import EmptyOperator
 from airflow.providers.oracle.hooks.oracle import OracleHook
 from datetime import datetime
-from kafka import KafkaProducer
 
 DEFAULT_ARGS = {"email": ["apexdev@sportmaster.ru"],
                 "email_on_failure": True}
-
-KAFKA_BOOTSTRAP_SERVER = 'oraapex-draft:9092'
-TOPIC = 'EMPTY_SUBPARTITIONS_TABLES'
 
 dag = DAG(
     dag_id="empty_subpartitions_tables",
@@ -36,9 +32,7 @@ def get_sql_scripts(connection):
 
 def _get_info():
 
-    producer = KafkaProducer(bootstrap_servers=KAFKA_BOOTSTRAP_SERVER)
-
-    apex_hook = OracleHook(oracle_conn_id="apex_ms_kafka_es_consumer")
+    apex_hook = OracleHook(oracle_conn_id="apex_ms_es_consumer")
 
     with apex_hook.get_conn() as connection_apex:
         sql_list = get_sql_scripts(connection_apex)

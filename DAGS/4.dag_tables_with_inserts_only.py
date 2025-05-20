@@ -31,7 +31,7 @@ def get_sql_scripts(connection):
 
 
 def _get_info():
-    apex_hook = OracleHook(oracle_conn_id="apex_ms_kafka_tables_insert_consumer")
+    apex_hook = OracleHook(oracle_conn_id="apex_ms_tables_insert_consumer")
 
     with apex_hook.get_conn() as connection_apex:
         sql_list = get_sql_scripts(connection_apex)
